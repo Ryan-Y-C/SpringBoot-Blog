@@ -45,7 +45,6 @@ public class AuthController {
         String password = usernameAndPassword.get("password").toString();
         UserDetails userDetails;
         try {
-
             userDetails= userDetailsService.loadUserByUsername(username);
         } catch (UsernameNotFoundException e) {
             Map<String,String> map=new HashMap<>();

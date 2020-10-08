@@ -10,7 +10,7 @@ public class OrderService {
         this.userService = userService;
     }
 
-    public void placeOrder(Integer userid, String item){
-        System.out.println(userService.getUserById(userid).getName());
-    }
+//    public void placeOrder(Integer userid, String item){
+//        System.out.println(userService.getUserById(userid).getName());
+//    }
 }
