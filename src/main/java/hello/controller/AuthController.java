@@ -1,6 +1,7 @@
 package hello.controller;
 
 import hello.entity.User;
+import hello.service.UserService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,14 +21,13 @@ import java.util.Map;
 
 @Controller
 public class AuthController {
-    private UserDetailsService userDetailsService;
+    private UserService userService;
 
     private AuthenticationManager authenticationManager;
 
     @Inject
-    public AuthController(UserDetailsService userDetailsService,
-                          AuthenticationManager authenticationManager) {
-        this.userDetailsService = userDetailsService;
+    public AuthController(UserService userService, AuthenticationManager authenticationManager) {
+        this.userService=userService;
         this.authenticationManager = authenticationManager;
     }
 
@@ -35,7 +35,15 @@ public class AuthController {
     @GetMapping("/auth")
     @ResponseBody
     public Object auth() {
-        return new Auth("ok", true, new User(1, "张三"));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (username.contains("anonymous")) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("status", "ok");
+            map.put("isLogin", false);
+            return map;
+        } else {
+            return new Auth("ok", true, userService.getUserByUsername(username));
+        }
     }
 
     @PostMapping("/auth/login")
@@ -45,28 +53,25 @@ public class AuthController {
         String password = usernameAndPassword.get("password").toString();
         UserDetails userDetails;
         try {
-            userDetails= userDetailsService.loadUserByUsername(username);
+            userDetails = userService.loadUserByUsername(username);
         } catch (UsernameNotFoundException e) {
-            Map<String,String> map=new HashMap<>();
-            map.put("status","fail");
-            map.put("msg","用户不存在");
+            Map<String, String> map = new HashMap<>();
+            map.put("status", "fail");
+            map.put("msg", "用户不存在");
             return map;
         }
         UsernamePasswordAuthenticationToken token =
-                new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        password,
-                        userDetails.getAuthorities());
+                new UsernamePasswordAuthenticationToken(userDetails, password, userDetails.getAuthorities());
         try {
             authenticationManager.authenticate(token);
             SecurityContextHolder.getContext().setAuthentication(token);
-            User loggedInUser = new User(1, "张三");
-            return new Result("ok", "登录成功", loggedInUser);
+            User loggedInUser = new User(1, "张三","123");
+            return new Result("ok", "登录成功", userService.getUserByUsername(username));
         } catch (BadCredentialsException e) {
             //当密码不正确的时候会抛出BadCredentialsException异常
-            Map<String,String> map=new HashMap<>();
-            map.put("status","fail");
-            map.put("msg","密码不正确");
+            Map<String, String> map = new HashMap<>();
+            map.put("status", "fail");
+            map.put("msg", "密码不正确");
             return map;
         }
     }
@@ -118,7 +123,7 @@ public class AuthController {
             return status;
         }
 
-        public boolean isLogin() {
+        public boolean getIsLogin() {
             return isLogin;
         }
 
