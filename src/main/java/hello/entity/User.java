@@ -1,5 +1,7 @@
 package hello.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.time.Instant;
 
 public class User {
@@ -8,18 +10,10 @@ public class User {
     private String avatar;
     private Instant createdAt;
     private Instant updatedAt;
+    @JsonIgnore
     private String encryptedPassword;
 
-//    public User(Integer id, String username, ) {
-//        this.id = id;
-//        this.username = username;
-//        this.avatar ="";
-//        this.createdAt=Instant.now();
-//        this.updatedAt=Instant.now();
-//    }
-
-    public User(Integer id, String username, String encryptedPassword) {
-        this.id = id;
+    public User(String username, String encryptedPassword) {
         this.username = username;
         this.avatar = "";
         this.encryptedPassword=encryptedPassword;
@@ -29,6 +23,10 @@ public class User {
 
     public String getEncryptedPassword() {
         return encryptedPassword;
+    }
+
+    public void setEncryptedPassword(String encryptedPassword) {
+        this.encryptedPassword = encryptedPassword;
     }
 
     public String getAvatar() {

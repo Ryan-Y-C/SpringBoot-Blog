@@ -2,12 +2,12 @@ package hello.controller;
 
 import hello.entity.User;
 import hello.service.UserService;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,31 +18,69 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Controller
 public class AuthController {
+
     private UserService userService;
 
     private AuthenticationManager authenticationManager;
 
     @Inject
     public AuthController(UserService userService, AuthenticationManager authenticationManager) {
-        this.userService=userService;
+        this.userService = userService;
         this.authenticationManager = authenticationManager;
     }
 
+    @PostMapping("/auth/register")
+    @ResponseBody
+    public Object registerUser(@RequestBody Map<String, Object> registerUsernameAndPassword) {
+        String username = registerUsernameAndPassword.get("username").toString();
+        String password = registerUsernameAndPassword.get("password").toString();
+        boolean flag = Pattern.matches("^(?!_)(?!.*?_$)[a-zA-Z0-9_\\u4e00-\\u9fa5]+$", username);
+        if ((username.length() > 0 && username.length() <= 16) && (flag)) {
+            if (password.length() > 5 && password.length() < 17) {
+                try {
+                    userService.save(username, password);
+                    return new Result("ok", "注册成功", userService.getUserByUsername(username));
+                } catch (DuplicateKeyException e) {
+                    return Status.failStatus("用户已存在");
+                }
+            } else {
+                return Status.failStatus("密码, 长度6到16个任意字符");
+            }
+
+        } else {
+            return Status.failStatus("用户名长度1到15个字符，只能是字母数字下划线中文");
+        }
+    }
 
     @GetMapping("/auth")
     @ResponseBody
     public Object auth() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        if (username.contains("anonymous")) {
+        User user = userService.getUserByUsername(username);
+        if (user == null) {
             Map<String, Object> map = new HashMap<>();
             map.put("status", "ok");
             map.put("isLogin", false);
             return map;
         } else {
-            return new Auth("ok", true, userService.getUserByUsername(username));
+            return new Auth("ok", true, user);
+        }
+    }
+
+    @GetMapping("/auth/logout")
+    @ResponseBody
+    public Object logout() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userService.getUserByUsername(username);
+        if (user == null) {
+            return Status.failStatus("用户尚未登录");
+        } else {
+            SecurityContextHolder.clearContext();
+            return Status.successStatus("注销成功");
         }
     }
 
@@ -55,24 +93,17 @@ public class AuthController {
         try {
             userDetails = userService.loadUserByUsername(username);
         } catch (UsernameNotFoundException e) {
-            Map<String, String> map = new HashMap<>();
-            map.put("status", "fail");
-            map.put("msg", "用户不存在");
-            return map;
+            return Status.failStatus("用户不存在");
         }
         UsernamePasswordAuthenticationToken token =
                 new UsernamePasswordAuthenticationToken(userDetails, password, userDetails.getAuthorities());
         try {
             authenticationManager.authenticate(token);
             SecurityContextHolder.getContext().setAuthentication(token);
-            User loggedInUser = new User(1, "张三","123");
             return new Result("ok", "登录成功", userService.getUserByUsername(username));
         } catch (BadCredentialsException e) {
             //当密码不正确的时候会抛出BadCredentialsException异常
-            Map<String, String> map = new HashMap<>();
-            map.put("status", "fail");
-            map.put("msg", "密码不正确");
-            return map;
+            return Status.failStatus("密码不正确");
         }
     }
 
@@ -129,6 +160,32 @@ public class AuthController {
 
         public Object getData() {
             return data;
+        }
+    }
+
+    private static class Status {
+        private String status;
+        private String msg;
+
+        private static Status failStatus(String msg) {
+            return new Status("fail", msg);
+        }
+
+        public static Status successStatus(String msg) {
+            return new Status("ok", msg);
+        }
+
+        private Status(String status, String msg) {
+            this.status = status;
+            this.msg = msg;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public String getMsg() {
+            return msg;
         }
     }
 }
