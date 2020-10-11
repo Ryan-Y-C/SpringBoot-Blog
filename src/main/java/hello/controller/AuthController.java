@@ -6,6 +6,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -59,8 +60,8 @@ public class AuthController {
     @GetMapping("/auth")
     @ResponseBody
     public Object auth() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userService.getUserByUsername(username);
+        Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+        User user = userService.getUserByUsername(authentication!=null?authentication.getName():null);
         if (user == null) {
             Map<String, Object> map = new HashMap<>();
             map.put("status", "ok");
