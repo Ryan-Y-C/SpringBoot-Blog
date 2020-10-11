@@ -49,7 +49,7 @@ class AuthControllerTest {
 
     @Test
     void returnNotLoginByDefault() throws Exception {
-        mvc.perform(get("/auth")).andExpect(status().isOk()).andExpect(mvcResult -> Assertions.assertTrue(mvcResult.getResponse().getContentAsString().contains("true")));
+        mvc.perform(get("/auth")).andExpect(status().isOk()).andExpect(mvcResult -> Assertions.assertTrue(mvcResult.getResponse().getContentAsString().contains("false")));
     }
 
     @Test
