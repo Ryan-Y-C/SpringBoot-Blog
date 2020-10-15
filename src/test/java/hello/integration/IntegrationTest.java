@@ -29,7 +29,7 @@ public class IntegrationTest {
     Environment environment;
 
     @Test
-    public void indexHtmlAccessible() throws IOException {
+    public void notLoggedInByDefault() throws IOException {
         String port = environment.getProperty("local.server.port");
         System.out.println(environment.getProperty("local.server.port"));
         OkHttpClient client = new OkHttpClient();
@@ -45,6 +45,5 @@ public class IntegrationTest {
             Assertions.assertTrue(body.contains("false"));
             Assertions.assertEquals(200, response.code());
         }
-
     }
 }

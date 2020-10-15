@@ -1,6 +1,6 @@
 package hello.controller;
 
-import hello.entity.User;
+import hello.entity.*;
 import hello.service.UserService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -44,7 +44,7 @@ public class AuthController {
             if (password.length() > 5 && password.length() < 17) {
                 try {
                     userService.save(username, password);
-                    return new Result("ok", "注册成功", userService.getUserByUsername(username));
+                    return new LogInResult("ok", "注册成功", userService.getUserByUsername(username));
                 } catch (DuplicateKeyException e) {
                     return Status.failStatus("用户已存在");
                 }
@@ -101,92 +101,10 @@ public class AuthController {
         try {
             authenticationManager.authenticate(token);
             SecurityContextHolder.getContext().setAuthentication(token);
-            return new Result("ok", "登录成功", userService.getUserByUsername(username));
+            return new LogInResult("ok", "登录成功", userService.getUserByUsername(username));
         } catch (BadCredentialsException e) {
             //当密码不正确的时候会抛出BadCredentialsException异常
             return Status.failStatus("密码不正确");
-        }
-    }
-
-    private class Result {
-        private String status;
-        private String msg;
-        private Object data;
-
-        public Result() {
-        }
-
-        public Result(String status, String msg) {
-            this.status = status;
-            this.msg = msg;
-        }
-
-        public Result(String status, String msg, Object data) {
-            this.status = status;
-            this.msg = msg;
-            this.data = data;
-        }
-
-        public String getMsg() {
-            return msg;
-        }
-
-        public String getStatus() {
-            return "ok";
-        }
-
-        public Object getData() {
-            return data;
-        }
-    }
-
-    private class Auth {
-        private String status;
-        private boolean isLogin;
-        private Object data;
-
-        public Auth(String status, boolean isLogin, Object data) {
-            this.status = status;
-            this.isLogin = isLogin;
-            this.data = data;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public boolean getIsLogin() {
-            return isLogin;
-        }
-
-        public Object getData() {
-            return data;
-        }
-    }
-
-    private static class Status {
-        private String status;
-        private String msg;
-
-        private static Status failStatus(String msg) {
-            return new Status("fail", msg);
-        }
-
-        public static Status successStatus(String msg) {
-            return new Status("ok", msg);
-        }
-
-        private Status(String status, String msg) {
-            this.status = status;
-            this.msg = msg;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public String getMsg() {
-            return msg;
         }
     }
 }
