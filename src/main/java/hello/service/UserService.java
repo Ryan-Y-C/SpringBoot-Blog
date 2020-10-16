@@ -43,4 +43,8 @@ public class UserService implements UserDetailsService {
         String encryptedPassword = user.getEncryptedPassword();
         return new org.springframework.security.core.userdetails.User(username, encryptedPassword, Collections.emptyList());
     }
+
+    public User getUserById(Integer id) {
+        return userMapper.getUserById(id);
+    }
 }

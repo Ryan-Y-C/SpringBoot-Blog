@@ -14,4 +14,7 @@ public interface UserMapper {
     @Insert("insert into user(username, encrypted_password,created_at,updated_at)"+
             "values(#{username},#{encrypted_password},now(),now())")
     void save(@Param("username")String username, @Param("encrypted_password") String encryptedPassword);
+
+    @Select("SELECT * FROM USER WHERE id = #{id}")
+    User getUserById(@Param("id") Integer id);
 }
